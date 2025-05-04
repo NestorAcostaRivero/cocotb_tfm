@@ -1,5 +1,6 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1746141902" />
+    <property name="random_seed" value="1746398623" />
+    <testcase name="fifo_test_with_classes" classname="fifo_test_with_classes" file="/home/nestor/cocotb_prj/src/fifo_test/tests/fifo_test_with_classes.py" lineno="27" time="0.04764294624328613" sim_time_ns="640.001" ratio_time="13433.279225257595" />
   </testsuite>
 </testsuites>
