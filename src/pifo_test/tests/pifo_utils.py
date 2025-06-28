@@ -1,5 +1,5 @@
 import cocotb
-from cocotb.triggers import RisingEdge
+from cocotb.triggers import RisingEdge, FallingEdge
 from cocotb.queue import QueueEmpty, Queue
 from cocotb.handle import SimHandleBase
 from pyuvm import utility_classes
@@ -20,11 +20,15 @@ class PifoBfm(metaclass=utility_classes.Singleton):
         self.remove_mon_queue = Queue()
 
     async def reset(self):
+        await FallingEdge(self.dut.clk)
         self.dut.rst.value = 1
-        await RisingEdge(self.dut.clk)
-        await RisingEdge(self.dut.clk)
+        self.dut.insert.value = 0
+        self.dut.remove.value = 0
+        self.dut.rank_in.value = 0
+        self.dut.meta_in.value = 0
+        await FallingEdge(self.dut.clk)
         self.dut.rst.value = 0
-        await RisingEdge(self.dut.clk)
+        await FallingEdge(self.dut.clk)
 
     async def insert(self, rank, meta):
         await self.insert_queue.put((rank, meta))
@@ -38,16 +42,16 @@ class PifoBfm(metaclass=utility_classes.Singleton):
     async def get_removed(self):
         return await self.remove_mon_queue.get()
 
-    async def insert_bfm(self):
+    async def driver_bfm(self):
         while True:
             await RisingEdge(self.dut.clk)
             try:
                 if get_int(self.dut.full) == 0:
-                    rank, meta = self.insert_queue.get_nowait()
+                    rank, meta = self.insert_queue.get_nowait() # siguiente elemento de la cola sin esperar (no frena el bucle ni bloquea procesos)
                     self.dut.rank_in.value = rank
                     self.dut.meta_in.value = meta
                     self.dut.insert.value = 1
-                    self.insert_mon_queue.put_nowait((rank, meta))
+                    self.insert_mon_queue.put_nowait((rank, meta)) # inserta inmediatamente y sin bloquear 
                 else:
                     self.dut.insert.value = 0
             except QueueEmpty:
@@ -78,6 +82,6 @@ class PifoBfm(metaclass=utility_classes.Singleton):
             prev_valid = valid
 
     def start_bfm(self):
-        cocotb.start_soon(self.insert_bfm())
+        cocotb.start_soon(self.driver_bfm())
         cocotb.start_soon(self.remove_bfm())
         cocotb.start_soon(self.monitor_bfm())

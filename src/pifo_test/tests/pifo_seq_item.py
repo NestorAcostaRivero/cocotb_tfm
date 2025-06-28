@@ -1,5 +1,4 @@
-from pyuvm import uvm_sequence
-from pyuvm import uvm_sequence_item
+from pyuvm import uvm_sequence, uvm_sequence_item, ConfigDB
 import random
 
 # Sequence item
@@ -16,14 +15,16 @@ class PifoInsertSeq(uvm_sequence):
     def __init__(self, name="PifoInsertSeq", num_items=10):
         super().__init__(name)
         self.num_items = num_items
-
+        
     async def body(self):
         for _ in range(self.num_items):
             rank = random.randint(0, 255)
             meta = random.randint(0, 4095)
             item = PifoSeqItem("insert_item", rank, meta)
+
             await self.start_item(item)
             await self.finish_item(item)
+
 
 class PifoRemoveSeq(uvm_sequence):
     def __init__(self, name="PifoRemoveSeq", num_items=10):
@@ -38,6 +39,8 @@ class PifoRemoveSeq(uvm_sequence):
             await self.start_item(item)
             await self.finish_item(item)
 
+# Tests
+
 class PifoFullTestSeq(uvm_sequence):
     async def body(self):
         insert_seq = PifoInsertSeq("insert", num_items=5)
@@ -45,3 +48,11 @@ class PifoFullTestSeq(uvm_sequence):
         seqr = ConfigDB().get(None, "", "SEQR")
         await insert_seq.start(seqr)
         await remove_seq.start(seqr)
+
+
+class TestPifoInsertSeq(uvm_sequence):
+
+    async def body(self):
+        insert_seq = PifoInsertSeq("insert", num_items=5)
+        seqr = ConfigDB().get(None, "", "SEQR")
+        await insert_seq.start(seqr)

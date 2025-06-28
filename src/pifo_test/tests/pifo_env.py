@@ -8,12 +8,10 @@ class PifoEnv(uvm_env):
     def build_phase(self):
         # Crear componentes
         self.seqr = uvm_sequencer("seqr", self)
+        ConfigDB().set(None, "*", "SEQR", self.seqr)
         self.driver = PifoDriver.create("driver", self)
         self.monitor = PifoMonitor("monitor", self)
         self.scoreboard = PifoScoreboard("scoreboard", self)
-
-        # Guardar el sequencer en ConfigDB
-        ConfigDB().set(None, "*", "SEQR", self.seqr)
         
 
     def connect_phase(self):
@@ -22,3 +20,5 @@ class PifoEnv(uvm_env):
 
         # Conectar monitor al scoreboard
         self.monitor.ap.connect(self.scoreboard.actual_fifo.analysis_export)
+
+        self.driver.ap.connect(self.scoreboard.expected_fifo.analysis_export)
