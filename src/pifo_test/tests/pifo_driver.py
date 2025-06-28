@@ -1,4 +1,4 @@
-from pyuvm import uvm_driver, uvm_tlm_analysis_fifo, ConfigDB, uvm_analysis_port
+from pyuvm import uvm_driver, uvm_tlm_analysis_fifo, ConfigDB, uvm_analysis_port, uvm_root
 from pifo_seq_item import PifoSeqItem
 from pifo_utils import PifoBfm
 
@@ -21,9 +21,12 @@ class PifoDriver(uvm_driver):
 
             if item.rank is not None and item.meta is not None:
                 # Inserción
+                uvm_root().logger.info(f"[PifoDriver] Insert: rank={item.rank}, meta={item.meta}")
                 await self.bfm.insert(item.rank, item.meta)
-                if self.ap:
-                    self.ap.write(item)
+                await self.bfm.get_inserted()
+                item.result_rank = item.rank
+                item.result_meta = item.meta
+                self.ap.write(item)
             else:
                 # Eliminación
                 await self.bfm.remove()

@@ -37,11 +37,9 @@ class PifoScoreboard(uvm_component):
             _, actual = self.actual_get_port.try_get()
             if (expected.meta != actual.result_meta or
                 expected.rank != actual.result_rank):
-                self.logger.error(f"FAILED: Expected meta={expected.meta}, "
-                                  f"rank={expected.rank} | Got meta={actual.result_meta}, "
-                                  f"rank={actual.result_rank}")
+                uvm_root().logger.info("Hola")
                 passed = False
             else:
-                self.logger.info(f"PASSED: meta={actual.result_meta}, rank={actual.result_rank}")
+                uvm_root().logger.info("Adiós")
 
         assert passed, "Scoreboard found mismatches"

@@ -2,7 +2,8 @@ import cocotb
 from cocotb.triggers import RisingEdge, FallingEdge
 from cocotb.queue import QueueEmpty, Queue
 from cocotb.handle import SimHandleBase
-from pyuvm import utility_classes
+from pyuvm import utility_classes, uvm_root
+
 
 def get_int(signal: SimHandleBase) -> int:
     try:
@@ -16,8 +17,8 @@ class PifoBfm(metaclass=utility_classes.Singleton):
         self.dut = cocotb.top
         self.insert_queue = Queue()
         self.remove_queue = Queue()
-        self.insert_mon_queue = Queue()
-        self.remove_mon_queue = Queue()
+        self.in_mon_queue = Queue()
+        self.out_mon_queue = Queue()
 
     async def reset(self):
         await FallingEdge(self.dut.clk)
@@ -37,30 +38,32 @@ class PifoBfm(metaclass=utility_classes.Singleton):
         await self.remove_queue.put(True)
 
     async def get_inserted(self):
-        return await self.insert_mon_queue.get()
+        return await self.in_mon_queue.get()
 
-    async def get_removed(self):
-        return await self.remove_mon_queue.get()
+    async def get_out(self):
+        return await self.out_mon_queue.get()
 
-    async def driver_bfm(self):
+    async def insert_bfm(self):
         while True:
-            await RisingEdge(self.dut.clk)
+            await FallingEdge(self.dut.clk)
             try:
                 if get_int(self.dut.full) == 0:
                     rank, meta = self.insert_queue.get_nowait() # siguiente elemento de la cola sin esperar (no frena el bucle ni bloquea procesos)
+                    uvm_root().logger.info(f"[Insert_BFM] Insert: rank={rank}, meta={meta}")
                     self.dut.rank_in.value = rank
                     self.dut.meta_in.value = meta
                     self.dut.insert.value = 1
-                    self.insert_mon_queue.put_nowait((rank, meta)) # inserta inmediatamente y sin bloquear 
+                    self.in_mon_queue.put_nowait((rank, meta)) # inserta inmediatamente y sin bloquear
+                    await FallingEdge(self.dut.clk)
+                    self.dut.insert.value = 0
                 else:
                     self.dut.insert.value = 0
             except QueueEmpty:
                 self.dut.insert.value = 0
-            
 
     async def remove_bfm(self):
         while True:
-            await RisingEdge(self.dut.clk)
+            await FallingEdge(self.dut.clk)
             try:
                 if get_int(self.dut.empty) == 0:
                     _ = self.remove_queue.get_nowait()
@@ -73,15 +76,15 @@ class PifoBfm(metaclass=utility_classes.Singleton):
     async def monitor_bfm(self):
         prev_valid = 0
         while True:
-            await RisingEdge(self.dut.clk)
+            await FallingEdge(self.dut.clk)
             valid = get_int(self.dut.valid_out)
             if valid and not prev_valid:
                 rank = get_int(self.dut.rank_out)
                 meta = get_int(self.dut.meta_out)
-                self.remove_mon_queue.put_nowait((rank, meta))
+                self.out_mon_queue.put_nowait((rank, meta))
             prev_valid = valid
 
     def start_bfm(self):
-        cocotb.start_soon(self.driver_bfm())
+        cocotb.start_soon(self.insert_bfm())
         cocotb.start_soon(self.remove_bfm())
         cocotb.start_soon(self.monitor_bfm())

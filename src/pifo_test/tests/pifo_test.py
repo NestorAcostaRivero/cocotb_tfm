@@ -1,8 +1,18 @@
-from pyuvm import uvm_test, ConfigDB
+from pyuvm import uvm_test, ConfigDB, uvm_root
 from pifo_env import PifoEnv
 from pifo_seq_item import TestPifoInsertSeq
 import pyuvm
 import cocotb
+import logging
+
+
+if not uvm_root().logger.hasHandlers():
+    handler = logging.StreamHandler()
+    formatter = logging.Formatter('[%(levelname)s] %(message)s')
+    handler.setFormatter(formatter)
+    uvm_root().logger.addHandler(handler)
+
+uvm_root().logger.setLevel(logging.INFO)
 
 
 
