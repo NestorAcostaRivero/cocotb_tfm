@@ -50,7 +50,7 @@ class PifoScoreboard(uvm_component):
                     f"[Scoreboard] MISMATCH → Expected rank={expected.rank}, meta={expected.meta} | Got rank={actual.result_rank}, meta={actual.result_meta}")
                 passed = False
             else:
-                uuvm_root().logger.info(
+                uvm_root().logger.info(
                     f"[Scoreboard] MATCH → Expected rank={expected.rank}, meta={expected.meta} | Actual rank={actual.result_rank}, meta={actual.result_meta}")
 
         if not passed:

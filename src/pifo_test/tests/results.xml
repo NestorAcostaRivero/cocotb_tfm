@@ -1,8 +1,8 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1751221864" />
-    <testcase name="PifoBasicTest" classname="pifo_test" file="/home/nestor/cocotb_prj/.venv/cocotb_venv/lib/python3.12/site-packages/pyuvm/extension_classes.py" lineno="20" time="0.02434396743774414" sim_time_ns="110.001" ratio_time="4518.614325348168">
-      <failure message="Test failed with RANDOM_SEED=1751221864" />
+    <property name="random_seed" value="1751222614" />
+    <testcase name="PifoBasicTest" classname="pifo_test" file="/home/nestor/cocotb_prj/.venv/cocotb_venv/lib/python3.12/site-packages/pyuvm/extension_classes.py" lineno="20" time="0.020664453506469727" sim_time_ns="110.001" ratio_time="5323.199085113011">
+      <failure message="Test failed with RANDOM_SEED=1751222614" />
     </testcase>
   </testsuite>
 </testsuites>
