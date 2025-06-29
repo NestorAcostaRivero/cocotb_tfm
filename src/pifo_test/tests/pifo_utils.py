@@ -31,6 +31,7 @@ class PifoBfm(metaclass=utility_classes.Singleton):
         self.dut.rst.value = 0
         await FallingEdge(self.dut.clk)
 
+
     async def insert(self, rank, meta):
         await self.insert_queue.put((rank, meta))
 

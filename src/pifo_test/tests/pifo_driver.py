@@ -1,6 +1,7 @@
 from pyuvm import uvm_driver, uvm_tlm_analysis_fifo, ConfigDB, uvm_analysis_port, uvm_root
 from pifo_seq_item import PifoSeqItem
 from pifo_utils import PifoBfm
+from cocotb.triggers import RisingEdge, FallingEdge
 
 
 class PifoDriver(uvm_driver):

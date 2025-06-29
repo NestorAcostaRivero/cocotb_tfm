@@ -14,5 +14,5 @@ class PifoMonitor(uvm_component):
             item = PifoSeqItem("monitored_item", rank=None, meta=None)
             item.result_rank = rank
             item.result_meta = meta
-            uvm_root().logger.info(f"MONITOR: Captured result rank={rank}, meta={meta}")
+            uvm_root().logger.info(f"[Monitor] Captured result rank={rank}, meta={meta}")
             self.ap.write(item)
