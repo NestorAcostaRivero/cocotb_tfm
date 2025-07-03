@@ -51,12 +51,12 @@ class PifoBfm(metaclass=utility_classes.Singleton):
             await FallingEdge(self.dut.clk)
             try:
                 if get_int(self.dut.full) == 0:
-                    self.dut.insert.value = 1
+                    
                     rank, meta = self.insert_queue.get_nowait() # siguiente elemento de la cola sin esperar (no frena el bucle ni bloquea procesos)
                     uvm_root().logger.info(f"[Insert_BFM] Insert: rank={rank}, meta={meta}")
                     self.dut.rank_in.value = rank
                     self.dut.meta_in.value = meta
-                    
+                    self.dut.insert.value = 1
                     uvm_root().logger.info(f"[Insert_BFM] Insert: {int(self.dut.insert.value)}")
                     self.in_mon_queue.put_nowait((rank, meta))
                     await FallingEdge(self.dut.clk)
