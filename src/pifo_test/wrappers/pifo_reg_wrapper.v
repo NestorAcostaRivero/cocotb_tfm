@@ -38,11 +38,5 @@ pifo_reg dut (
     .full(full)
 );
 
-initial begin
-    $dumpfile("pifo_sim.vcd");
-    $dumpvars(0, pifo_reg_wrapper);
-    clk = 0;
-    forever #5 clk = ~clk;
-end
 
 endmodule

@@ -13,14 +13,8 @@ uvm_root().logger.setLevel(logging.INFO)
 
 class PifoScoreboard(uvm_component):
     def build_phase(self):
-        self.expected_fifo = uvm_tlm_analysis_fifo("expected_fifo", self)
-        self.actual_fifo = uvm_tlm_analysis_fifo("actual_fifo", self)
-        self.expected_get_port = uvm_get_port("expected_get_port", self)
-        self.actual_get_port = uvm_get_port("actual_get_port", self)
-
-    def connect_phase(self):
-        self.expected_get_port.connect(self.expected_fifo.get_export)
-        self.actual_get_port.connect(self.actual_fifo.get_export)
+        self.in_fifo = uvm_tlm_analysis_fifo("in_fifo", self)
+        self.out_fifo = uvm_tlm_analysis_fifo("out_fifo", self)
 
     def check_phase(self):
         try:
@@ -32,16 +26,16 @@ class PifoScoreboard(uvm_component):
         actual_items = []
         passed = True
         
-        while self.expected_get_port.can_get():
-            _, expected = self.expected_get_port.try_get()
+        while self.in_fifo.can_get():
+            _, expected = self.in_fifo.try_get()
             expected_items.append(expected)
         
 
-        while self.actual_get_port.can_get():
-            _, actual = self.actual_get_port.try_get()
+        while self.out_fifo.can_get():
+            _, actual = self.out_fifo.try_get()
             actual_items.append(actual)
         
-        uvm_root().logger.info(f"[Scoreboard] Expected list: {[ (i.rank, i.meta) for i in expected_items ]}")
+        uvm_root().logger.info(f"[Scoreboard] Expected list: {[ (i.result_rank, i.result_meta) for i in expected_items ]}")
         uvm_root().logger.info(f"[Scoreboard] Actual list:   {[ (i.result_rank, i.result_meta) for i in actual_items ]}")
 
         for expected, actual in zip(expected_items, actual_items):

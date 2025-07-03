@@ -3,7 +3,7 @@ from pifo_utils import PifoBfm
 from pifo_seq_item import PifoSeqItem
 
 
-class PifoMonitor(uvm_component):
+class PifoMonitorOut(uvm_component):
     def build_phase(self):
         self.ap = uvm_analysis_port("ap", self)
         self.bfm = PifoBfm()
@@ -14,5 +14,6 @@ class PifoMonitor(uvm_component):
             item = PifoSeqItem("monitored_item", rank=None, meta=None)
             item.result_rank = rank
             item.result_meta = meta
-            uvm_root().logger.info(f"[Monitor] Captured result rank={rank}, meta={meta}")
-            self.ap.write(item)
+            uvm_root().logger.info(f"[Monitor_OUT] Captured result rank={rank}, meta={meta}")
+            self.ap.write(item) 
+           

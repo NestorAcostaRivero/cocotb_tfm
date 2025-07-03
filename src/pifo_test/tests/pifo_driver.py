@@ -18,6 +18,7 @@ class PifoDriver(uvm_driver):
     async def run_phase(self):
         await self.launch_tb()
         while True:
+
             item = await self.seq_item_port.get_next_item()
 
             if item.rank is not None and item.meta is not None:
@@ -25,9 +26,7 @@ class PifoDriver(uvm_driver):
                 uvm_root().logger.info(f"[PifoDriver] Insert: rank={item.rank}, meta={item.meta}")
                 await self.bfm.insert(item.rank, item.meta)
                 await self.bfm.get_inserted()
-                item.result_rank = item.rank
-                item.result_meta = item.meta
-                self.ap.write(item)
+
             else:
                 # Eliminación
                 await self.bfm.remove()

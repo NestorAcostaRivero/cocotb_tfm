@@ -1,8 +1,9 @@
 import cocotb
-from cocotb.triggers import RisingEdge, FallingEdge
+from cocotb.triggers import RisingEdge, FallingEdge, Event
 from cocotb.queue import QueueEmpty, Queue
 from cocotb.handle import SimHandleBase
 from pyuvm import utility_classes, uvm_root
+
 
 
 def get_int(signal: SimHandleBase) -> int:
@@ -34,6 +35,7 @@ class PifoBfm(metaclass=utility_classes.Singleton):
 
     async def insert(self, rank, meta):
         await self.insert_queue.put((rank, meta))
+        
 
     async def remove(self):
         await self.remove_queue.put(True)
@@ -49,17 +51,21 @@ class PifoBfm(metaclass=utility_classes.Singleton):
             await FallingEdge(self.dut.clk)
             try:
                 if get_int(self.dut.full) == 0:
+                    self.dut.insert.value = 1
                     rank, meta = self.insert_queue.get_nowait() # siguiente elemento de la cola sin esperar (no frena el bucle ni bloquea procesos)
                     uvm_root().logger.info(f"[Insert_BFM] Insert: rank={rank}, meta={meta}")
                     self.dut.rank_in.value = rank
                     self.dut.meta_in.value = meta
-                    self.dut.insert.value = 1
-                    self.in_mon_queue.put_nowait((rank, meta)) # inserta inmediatamente y sin bloquear
+                    
+                    uvm_root().logger.info(f"[Insert_BFM] Insert: {int(self.dut.insert.value)}")
+                    self.in_mon_queue.put_nowait((rank, meta))
                     await FallingEdge(self.dut.clk)
                     self.dut.insert.value = 0
+                    
                 else:
                     self.dut.insert.value = 0
             except QueueEmpty:
+                
                 self.dut.insert.value = 0
 
     async def remove_bfm(self):
@@ -82,6 +88,7 @@ class PifoBfm(metaclass=utility_classes.Singleton):
             if valid and not prev_valid:
                 rank = get_int(self.dut.rank_out)
                 meta = get_int(self.dut.meta_out)
+                uvm_root().logger.info(f"[Monitor_BFM] Insert: rank={rank}, meta={meta}")
                 self.out_mon_queue.put_nowait((rank, meta))
             prev_valid = valid
 

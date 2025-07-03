@@ -1,5 +1,6 @@
 from pyuvm import uvm_sequence, uvm_sequence_item, ConfigDB
 import random
+from cocotb.triggers import Timer
 
 # Sequence item
 class PifoSeqItem(uvm_sequence_item):
@@ -9,7 +10,7 @@ class PifoSeqItem(uvm_sequence_item):
         self.meta = meta
         self.result_rank = None
         self.result_meta = None
-
+    
 # Secuencias
 class PifoInsertSeq(uvm_sequence):
     def __init__(self, name="PifoInsertSeq", num_items=10):
