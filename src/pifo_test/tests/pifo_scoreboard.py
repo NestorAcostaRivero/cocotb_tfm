@@ -1,6 +1,7 @@
 from pyuvm import uvm_component, uvm_tlm_analysis_fifo, ConfigDB, uvm_get_port, UVMConfigItemNotFound, uvm_root
 from pifo_seq_item import PifoSeqItem
 import logging
+from pifo_GR import PIFO
 
 if not uvm_root().logger.hasHandlers():
     handler = logging.StreamHandler()
@@ -13,39 +14,76 @@ uvm_root().logger.setLevel(logging.INFO)
 
 class PifoScoreboard(uvm_component):
     def build_phase(self):
-        self.in_fifo = uvm_tlm_analysis_fifo("in_fifo", self)
-        self.out_fifo = uvm_tlm_analysis_fifo("out_fifo", self)
+        self.pifo = PIFO()
+        self.in_pifo = uvm_tlm_analysis_fifo("in_pifo", self)
+        self.out_pifo = uvm_tlm_analysis_fifo("out_pifo", self)
 
+        
     def check_phase(self):
         try:
             self.errors = ConfigDB().get(self, "", "CREATE_ERRORS")
         except UVMConfigItemNotFound:
             self.errors = False
 
-        expected_items = []
-        actual_items = []
+        transacciones = []
         passed = True
         
-        while self.in_fifo.can_get():
-            _, expected = self.in_fifo.try_get()
-            expected_items.append(expected)
-        
+        while self.in_pifo.can_get() or self.out_pifo.can_get():
+            uvm_root().logger.info(f"in_pifo={self.in_pifo.can_get()}, out_pifo={self.out_pifo.can_get()}")
+            if self.in_pifo.can_get(): 
+                _, item = self.in_pifo.try_get()
+                transacciones.append(item)
+                uvm_root().logger.info(f"{item.rank, item.meta, item.insert, item.remove, item.timestamp}")
 
-        while self.out_fifo.can_get():
-            _, actual = self.out_fifo.try_get()
-            actual_items.append(actual)
-        
-        uvm_root().logger.info(f"[Scoreboard] Expected list: {[ (i.result_rank, i.result_meta) for i in expected_items ]}")
-        uvm_root().logger.info(f"[Scoreboard] Actual list:   {[ (i.result_rank, i.result_meta) for i in actual_items ]}")
+            if self.out_pifo.can_get():
+                _, actual = self.out_pifo.try_get()
+                transacciones.append(actual)
 
-        for expected, actual in zip(expected_items, actual_items):
-            if (expected.meta != actual.result_meta or expected.rank != actual.result_rank):
-                uvm_root().logger.error(
-                    f"[Scoreboard] MISMATCH → Expected rank={expected.rank}, meta={expected.meta} | Got rank={actual.result_rank}, meta={actual.result_meta}")
-                passed = False
-            else:
+        # Ordenar por timestamp (ascendente)
+        transacciones.sort(key=lambda x: (x.timestamp, 0 if x.remove else 1))
+
+        
+        for t in transacciones:
+            if t.insert:
+                # INSERT → solo actualiza GR
                 uvm_root().logger.info(
-                    f"[Scoreboard] MATCH → Expected rank={expected.rank}, meta={expected.meta} | Actual rank={actual.result_rank}, meta={actual.result_meta}")
+                    f"[Scoreboard] INSERT @ {t.timestamp}ns rank={t.rank} meta={t.meta}"
+                )
+                self.pifo.insert(t.rank, t.meta)
 
-        if not passed:
-            assert False, "Scoreboard found mismatches"
+            elif t.remove:
+                # REMOVE → validar contra GR
+                uvm_root().logger.info(
+                    f"[Scoreboard] REMOVE @ {t.timestamp}ns rank={t.rank} meta={t.meta}"
+                )
+
+                removed_item = self.pifo.remove()
+                if removed_item is None:
+                    raise AssertionError(
+                        f"[Scoreboard ERROR] @{t.timestamp}ns: DUT removed {t.rank},{t.meta} but GR queue is empty!"
+                    )
+
+                rank_expected, meta_expected = removed_item
+
+                # Assert que DUT == GR
+                assert rank_expected == t.rank and meta_expected == t.meta, (
+                    f"[Scoreboard MISMATCH @{t.timestamp}ns] "
+                    f"Expected rank={rank_expected}, meta={meta_expected} "
+                    f"but DUT gave rank={t.rank}, meta={t.meta}"
+                )
+
+                uvm_root().logger.info(
+                    f"[Scoreboard MATCH @{t.timestamp}ns] rank={t.rank}, meta={t.meta}"
+                )
+
+        # (opcional) estado final del GR
+        uvm_root().logger.info(
+            f"[Scoreboard] Estado final GR={[(i[0], i[1]) for i in self.pifo]}"
+        )
+
+
+
+
+
+
+

@@ -1,5 +1,5 @@
 from pyuvm import uvm_component, uvm_root
-from pifo_driver import PifoDriver
+from pifo_driver import PifoDriverRemove
 from pifo_monitor_out import PifoMonitorOut
 from pifo_sequencer import PifoSequencer
 import logging
@@ -20,7 +20,7 @@ class PifoAgentOut(uvm_component):
         super().__init__(name, parent)
 
     def build_phase(self):
-        self.driver = PifoDriver("driver", self)
+        self.driver = PifoDriverRemove("driver", self)
         self.monitor = PifoMonitorOut("monitor_out", self)
         self.sequencer = PifoSequencer("sequencer", self)
 

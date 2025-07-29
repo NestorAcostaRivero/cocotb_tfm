@@ -10,9 +10,13 @@ class PifoMonitorIn(uvm_component):
 
     async def run_phase(self):
         while True:
-            rank, meta = await self.bfm.get_inserted()
+            rank, meta, insert, remove, timestamp = await self.bfm.get_inserted()
             item = PifoSeqItem("monitored_item", rank=None, meta=None)
-            item.result_rank = rank
-            item.result_meta = meta
+            item.rank = rank
+            item.meta = meta
+            item.insert = insert
+            item.remove = remove
+            item.timestamp = timestamp
+
             uvm_root().logger.info(f"[Monitor_IN] Captured result rank={rank}, meta={meta}")
             self.ap.write(item) 

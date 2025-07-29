@@ -13,13 +13,15 @@ def get_int(signal: SimHandleBase) -> int:
         cocotb.log.warning(f"Invalid signal value {signal.value}, defaulting to 0")
         return 0
 
-class PifoBfm(metaclass=utility_classes.Singleton):
+class PifoBfm(metaclass=utility_classes.Singleton): #Solo hay una única instancia
     def __init__(self):
         self.dut = cocotb.top
         self.insert_queue = Queue()
         self.remove_queue = Queue()
         self.in_mon_queue = Queue()
         self.out_mon_queue = Queue()
+        self.driver_insert_signal = Queue()
+        self.driver_remove_signal = Queue()
 
     async def reset(self):
         await FallingEdge(self.dut.clk)
@@ -33,12 +35,12 @@ class PifoBfm(metaclass=utility_classes.Singleton):
         await FallingEdge(self.dut.clk)
 
 
-    async def insert(self, rank, meta):
-        await self.insert_queue.put((rank, meta))
+    async def insert(self, rank, meta, insert, remove, timestamp):
+        await self.insert_queue.put((rank, meta, insert, remove, timestamp))
         
 
-    async def remove(self):
-        await self.remove_queue.put(True)
+    async def remove(self, rank, meta, insert, remove, timestamp):
+        await self.remove_queue.put((rank, meta, insert, remove, timestamp))
 
     async def get_inserted(self):
         return await self.in_mon_queue.get()
@@ -46,53 +48,56 @@ class PifoBfm(metaclass=utility_classes.Singleton):
     async def get_out(self):
         return await self.out_mon_queue.get()
 
+    async def get_driver_insert_signal(self):
+        return await self.driver_insert_signal.get()
+
+    async def get_driver_remove_signal(self):
+        return await self.driver_remove_signal.get()
+
+
     async def insert_bfm(self):
         while True:
             await FallingEdge(self.dut.clk)
             try:
-                if get_int(self.dut.full) == 0:
-                    
-                    rank, meta = self.insert_queue.get_nowait() # siguiente elemento de la cola sin esperar (no frena el bucle ni bloquea procesos)
+                if not self.insert_queue.empty():
+                    rank, meta, insert, remove, timestamp = self.insert_queue.get_nowait() # siguiente elemento de la cola sin esperar (no frena el bucle ni bloquea procesos)
                     uvm_root().logger.info(f"[Insert_BFM] Insert: rank={rank}, meta={meta}")
                     self.dut.rank_in.value = rank
                     self.dut.meta_in.value = meta
-                    self.dut.insert.value = 1
-                    uvm_root().logger.info(f"[Insert_BFM] Insert: {int(self.dut.insert.value)}")
-                    self.in_mon_queue.put_nowait((rank, meta))
+                    self.dut.insert.value = insert
+                    self.in_mon_queue.put_nowait((rank, meta, insert, remove, timestamp))
                     await FallingEdge(self.dut.clk)
                     self.dut.insert.value = 0
-                    
-                else:
-                    self.dut.insert.value = 0
+                    await FallingEdge(self.dut.clk)
+                    self.driver_insert_signal.put_nowait((rank, meta, insert, remove, timestamp))
+
             except QueueEmpty:
-                
+                uvm_root().logger.info(f"ENTRE EN LA EXEPTION!")
                 self.dut.insert.value = 0
+            
+
 
     async def remove_bfm(self):
         while True:
             await FallingEdge(self.dut.clk)
             try:
-                if get_int(self.dut.empty) == 0:
-                    _ = self.remove_queue.get_nowait()
-                    self.dut.remove.value = 1
+                if get_int(self.dut.empty) == 0 and get_int(self.dut.insert) == 0 and get_int(self.dut.remove) == 0:
+                    rank, meta, insert, remove, timestamp = self.remove_queue.get_nowait()
+                    self.dut.remove.value = remove
+                    rank = get_int(self.dut.rank_out)
+                    meta = get_int(self.dut.meta_out)
+                    self.out_mon_queue.put_nowait((rank, meta, insert, remove, timestamp))
+                    await FallingEdge(self.dut.clk)
+                    self.dut.remove.value = 0
+                    await FallingEdge(self.dut.clk)
+                    self.driver_remove_signal.put_nowait((rank, meta, insert, remove, timestamp))
                 else:
                     self.dut.remove.value = 0
             except QueueEmpty:
                 self.dut.remove.value = 0
+            
 
-    async def monitor_bfm(self):
-        prev_valid = 0
-        while True:
-            await FallingEdge(self.dut.clk)
-            valid = get_int(self.dut.valid_out)
-            if valid and not prev_valid:
-                rank = get_int(self.dut.rank_out)
-                meta = get_int(self.dut.meta_out)
-                uvm_root().logger.info(f"[Monitor_BFM] Insert: rank={rank}, meta={meta}")
-                self.out_mon_queue.put_nowait((rank, meta))
-            prev_valid = valid
 
     def start_bfm(self):
         cocotb.start_soon(self.insert_bfm())
         cocotb.start_soon(self.remove_bfm())
-        cocotb.start_soon(self.monitor_bfm())

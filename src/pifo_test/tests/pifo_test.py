@@ -1,10 +1,10 @@
 from pyuvm import uvm_test, ConfigDB, uvm_root
 from pifo_env import PifoEnv
-from pifo_seq_item import TestPifoInsertSeq
+from pifo_sequences import InsertRemoveSeq
 import pyuvm
 import cocotb
 import logging
-from cocotb.clock import Clock
+from cocotb.triggers import Timer 
 
 
 if not uvm_root().logger.hasHandlers():
@@ -17,23 +17,23 @@ uvm_root().logger.setLevel(logging.INFO)
 
 
 
-
 @pyuvm.test()
 class PifoBasicTest(uvm_test):
     def build_phase(self):
         # Crear entorno de verificación
         self.env = PifoEnv("env", self)
-        cocotb.start_soon(Clock(cocotb.top.clk, 10, units="ns").start())
+        #cocotb.start_soon(Clock(cocotb.top.clk, 10, units="ns").start())
     
     def end_of_elaboration_phase(self):
         # Crear secuencia de inserción
-        self.testPifoInsert = TestPifoInsertSeq.create("test_insert_seq")
-        ConfigDB().set(None, "", "SEQR", self.env.agent_in.sequencer)
+        self.testPifo = InsertRemoveSeq.create("test_seq")
+        ConfigDB().set(None, "", "SEQR_INSERT", self.env.agent_in.sequencer)
+        ConfigDB().set(None, "", "SEQR_REMOVE", self.env.agent_out.sequencer)
 
     async def run_phase(self):
 
         self.raise_objection() # informa que la prueba sigue en ejecución
 
-        await self.testPifoInsert.start()
-
-        self.drop_objection() # dice a pyuvm que puede terminar cuando todo lo demás acabe
+        await self.testPifo.start()
+        
+        self.drop_objection() # dice a pyuvm que puede terminar cuando todo lo demás acabeS
