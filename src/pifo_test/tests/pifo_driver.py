@@ -28,9 +28,10 @@ class PifoDriverInsert(uvm_driver):
             sim_time = get_sim_time(units="ns")
             item.timestamp = sim_time
             await self.bfm.insert(item.rank, item.meta, item.insert, item.remove, item.timestamp)
+            await self.bfm.get_driver_insert_signal()
             self.seq_item_port.item_done()
 
-            await self.bfm.get_driver_insert_signal()
+            
 
 # Driver para hacer un remove
 
@@ -53,7 +54,7 @@ class PifoDriverRemove(uvm_driver):
             sim_time = get_sim_time(units="ns")
             item.timestamp = sim_time
             await self.bfm.remove(item.rank, item.meta, item.insert, item.remove, item.timestamp)
-            
+            await self.bfm.get_driver_remove_signal()
             self.seq_item_port.item_done()
 
-            await self.bfm.get_driver_remove_signal()
+            
