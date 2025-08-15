@@ -1,6 +1,6 @@
 <testsuites name="results">
   <testsuite name="all" package="all">
-    <property name="random_seed" value="1753976394" />
-    <testcase name="PifoBasicTest" classname="pifo_test" file="/home/nestor/cocotb_prj/.venv/cocotb_venv/lib/python3.12/site-packages/pyuvm/extension_classes.py" lineno="20" time="0.10134339332580566" sim_time_ns="320.001" ratio_time="3157.5911314834198" />
+    <property name="random_seed" value="1754486658" />
+    <testcase name="PifoBasicTest" classname="pifo_test" file="/home/nestor/cocotb_prj/.venv/cocotb_venv/lib/python3.12/site-packages/pyuvm/extension_classes.py" lineno="20" time="0.37121033668518066" sim_time_ns="510.001" ratio_time="1373.8868495801778" />
   </testsuite>
 </testsuites>

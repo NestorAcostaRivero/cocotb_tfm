@@ -53,6 +53,12 @@ class PifoDriverRemove(uvm_driver):
             uvm_root().logger.info(f"[Remove Driver] Remove: remove={item.remove}")
             sim_time = get_sim_time(units="ns")
             item.timestamp = sim_time
+
+            #No se puede hacer un insert y seguidamente un remove una vez la señal del insert esté a nivel bajo
+            advice = self.bfm.get_advice_insert_remove()
+            if advice:
+                await FallingEdge(self.bfm.dut.clk)
+
             await self.bfm.remove(item.rank, item.meta, item.insert, item.remove, item.timestamp)
             await self.bfm.get_driver_remove_signal()
             self.seq_item_port.item_done()
