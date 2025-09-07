@@ -1,7 +1,6 @@
 from pyuvm import uvm_env, uvm_sequencer, ConfigDB
 from pifo_scoreboard import PifoScoreboard
-from pifo_agent_out import PifoAgentOut
-from pifo_agent_in import PifoAgentIn
+from pifo_agent import PifoAgentIn, PifoAgentOut
 
 
 class PifoEnv(uvm_env):
