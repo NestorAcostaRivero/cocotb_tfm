@@ -4,6 +4,9 @@ from cocotb.triggers import Timer
 from pifo_seq_item import PifoSeqItem
 import asyncio
 import cocotb
+from pifo_rand import PyvscGenerator
+from pifo_vsc_generator import DirectedGenerator
+from pifo_cov_vsc import PifoCovVSC
 
 # Secuencias
 class PifoInsertSeq(uvm_sequence):
@@ -13,7 +16,7 @@ class PifoInsertSeq(uvm_sequence):
         
     async def body(self):
         for _ in range(self.num_items):
-            rank = random.randint(0, 255)
+            rank = random.randint(0, 65535)
             meta = random.randint(0, 4095)
             item = PifoSeqItem("insert_item", rank, meta, True, False)
 
@@ -103,8 +106,8 @@ class Write2FullAndMinPrio(uvm_sequence):
         fill_seq = PifoInsertSeq("fill", num_items=16)
         await fill_seq.start(seqr_insert)
 
-        # Paso 2: insertar ítem con la prioridad más baja (rank=255)
-        min_prio_item = PifoSeqItem("min_prio_item", rank=255, meta=random.randint(0, 4095), insert=True, remove=False)
+        # Paso 2: insertar ítem con la prioridad más baja (rank=65535)
+        min_prio_item = PifoSeqItem("min_prio_item", rank=65535, meta=random.randint(0, 4095), insert=True, remove=False)
         min_prio_seq = SingleInsertSeq(min_prio_item)
         await min_prio_seq.start(seqr_insert)
 
@@ -135,3 +138,52 @@ class InsertSamePriorityDifferentMeta(uvm_sequence):
         # Paso 3: Hacer 7 removes
         remove_seq = PifoRemoveSeq("remove", num_items=7)
         await remove_seq.start(seqr_remove)
+
+
+def _cfg(key, default=None):
+    try:
+        return ConfigDB().get(None, "", key)
+    except Exception:
+        return default
+
+class PifoRandomSeq(uvm_sequence):
+    def __init__(self, name="pifo_rand_seq"):
+        super().__init__(name)
+        self.num_txns = 200
+        self.warmup_inserts = 3
+        self.cov = PifoCovVSC()
+
+    async def body(self):
+        seqr_in  = _cfg("SEQR_INSERT")
+        seqr_out = _cfg("SEQR_REMOVE")
+
+        use_pyvsc = bool(_cfg("USE_PYVSC", False))
+        seed      = _cfg("PYVSC_SEED", None)
+        pattern   = _cfg("DIRECTED_PATTERN", "enqueue-heavy")
+
+        gen = PyvscGenerator(seed) if use_pyvsc else DirectedGenerator(pattern)
+
+        # Warm-up: 3 inserts garantizados + cobertura
+        for i in range(self.warmup_inserts):
+            it = gen.next_item(f"it_warm_{i}")
+            it.insert, it.remove = True, False
+            self.cov.sample_item(it)
+            await seqr_in.start_item(it)
+            await seqr_in.finish_item(it)
+
+        # Resto aleatorio + cobertura
+        for i in range(self.num_txns - self.warmup_inserts):
+            item = gen.next_item(f"it_{i+self.warmup_inserts}")
+            self.cov.sample_item(item)
+
+            if item.insert and not item.remove:
+                await seqr_in.start_item(item)
+                await seqr_in.finish_item(item)
+            elif item.remove and not item.insert:
+                await seqr_out.start_item(item)
+                await seqr_out.finish_item(item)
+            else:
+                raise RuntimeError(f"Item inválido: insert={item.insert} remove={item.remove}")
+
+        # Informe al final
+        self.cov.report()
