@@ -5,22 +5,22 @@ import random
 import logging
 
 class FifoScoreboard:
-    def __init__(self):
+    def __init__(self, dut):
         self.expected_values = []
-        self.log = logging.getLogger("Scoreboard")
+        self.dut = dut
     
     def append(self, value):
         self.expected_values.append(value)
-        self.log.info(f"Added to scoreboard: {value}")
+        self.dut._log.info(f"Added to scoreboard: {value}")
     
     def check(self, actual_value):
         if not self.expected_values:
-            self.log.error("No more expected values!")
+            self.dut._log.error("No more expected values!")
             return
             
         expected = self.expected_values.pop(0)
         assert actual_value == expected, f"Scoreboard error: Expected {expected}, got {actual_value}"
-        self.log.info(f"Verified: {actual_value} == {expected}")
+        self.dut._log.info(f"Verified: {actual_value} == {expected}")
 
 @cocotb.test()
 async def simple_fifo_test(dut):
@@ -28,6 +28,9 @@ async def simple_fifo_test(dut):
     dut._log.setLevel(logging.INFO)
     cocotb.start_soon(Clock(dut.clk, 10, units="ns").start()) #corrutina del reloj para que se ejecute concurrentemente con el test
     
+    # Instancia del scoreboard
+    sb = FifoScoreboard(dut)
+
     # Inicialización
     dut.reset.value = 1
     dut.push.value = 0
@@ -39,9 +42,6 @@ async def simple_fifo_test(dut):
     await RisingEdge(dut.clk)
     dut.reset.value = 0
     await RisingEdge(dut.clk)
-    
-    # Instancia del scoreboard
-    sb = FifoScoreboard()
     
     # Se generan diez datos aleatorios para la fifo
     test_data = [random.randint(0, 65535) for _ in range(10)]  
@@ -67,4 +67,4 @@ async def simple_fifo_test(dut):
     # Checkeo final
     assert dut.empty.value == 1, "FIFO should be empty after all pops"
     dut._log.info("Test completed successfully")
-    await Timer(100, 'ns')  # Small delay to finish
+    
