@@ -1,4 +1,3 @@
-# pifo_cov_vsc.py
 import vsc
 
 class PifoCovVSC:
@@ -13,11 +12,11 @@ class PifoCovVSC:
         # Helpers de categorización (evita bins por rango nativos)
         def rank_class():
             r = int(self._rank)
-            if r <= 255:         # low
+            if r <= 255:         # hi
                 return 0
             elif r <= 4095:      # mid
                 return 1
-            else:                # hi
+            else:                # low
                 return 2
 
         def meta_class():
@@ -47,9 +46,9 @@ class PifoCovVSC:
                 self.cp_rcls = vsc.coverpoint(
                     lambda: parent._rcls,
                     bins=dict(
-                        low=vsc.bin(0),
+                        hi=vsc.bin(0),
                         mid=vsc.bin(1),
-                        hi=vsc.bin(2),
+                        low=vsc.bin(2),
                     )
                 )
 
@@ -67,7 +66,8 @@ class PifoCovVSC:
                 # Cross: op × clase de rank (pasa como lista)
                 self.cr_op_rcls = vsc.cross([self.cp_op, self.cp_rcls])
 
-                # (opcional) otro cross:
+
+                # Cross: op x clase de rank x clase de meta
                 # self.cr_op_rcls_mcls = vsc.cross([self.cp_op, self.cp_rcls, self.cp_mcls])
 
         self._rank_class_fn = rank_class
@@ -86,9 +86,10 @@ class PifoCovVSC:
         self.cg.sample()
 
     def report(self):
-        """Imprime un resumen de cobertura (si la API lo soporta)."""
+        """Imprime un resumen de cobertura"""
         try:
             pct = self.cg.get_coverage()
             print(f"[COVERAGE] PyVSC total: {pct:.1f}%")
+            vsc.report_coverage(details=True)
         except Exception:
             print("[COVERAGE] PyVSC: muestreado (porcentaje no disponible en esta versión).")

@@ -7,7 +7,7 @@ class _VscPifoTxn:
     def __init__(self):
         
         self.rank   = vsc.rand_uint16_t()   
-        self.meta   = vsc.rand_uint8_t()   
+        self.meta   = vsc.rand_bit_t(12)   
         self.insert = vsc.rand_bit_t()
         self.remove = vsc.rand_bit_t()
         self.delay  = vsc.rand_uint16_t()
@@ -24,9 +24,9 @@ class _VscPifoTxn:
 
     @vsc.constraint
     def c_bias(self):
-        # Más inserts que removes (4:1)
+        # Más inserts que removes (2:1)
         vsc.dist(self.insert, [
-            vsc.weight(1, 4),
+            vsc.weight(1, 2),
             vsc.weight(0, 1),
         ])
 

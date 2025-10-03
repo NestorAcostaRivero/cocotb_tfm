@@ -28,7 +28,7 @@ synchronous_fifo dut (
 
 initial begin
     $dumpfile("fifo_sim.vcd");
-    $dumpvars(0, fifo_test);  // Cambiado para evitar el warning
+    $dumpvars(0, fifo_test);  
     clk = 0;
     forever #5 clk = ~clk;
 end

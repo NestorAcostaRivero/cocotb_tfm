@@ -90,7 +90,7 @@ class PifoBfm(metaclass=utility_classes.Singleton): #Solo hay una única instanc
         while True:
             await FallingEdge(self.dut.clk)
             try:
-                if get_int(self.dut.empty) == 0 and get_int(self.dut.insert) == 0 and get_int(self.dut.remove) == 0:
+                if get_int(self.dut.remove) == 0:
                     
                     rank, meta, insert, remove, timestamp = self.remove_queue.get_nowait()
                     self.dut.remove.value = remove

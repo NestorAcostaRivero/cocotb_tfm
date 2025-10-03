@@ -1,31 +1,36 @@
 [*]
 [*] GTKWave Analyzer v3.3.120 (w)1999-2024 BSI
-[*] Thu Jul 31 15:44:22 2025
+[*] Sun Sep 28 17:15:55 2025
 [*]
 [dumpfile] "/home/nestor/cocotb_prj/src/pifo_test/tests/pifo_sim.vcd"
-[dumpfile_mtime] "Thu Jul 31 15:39:55 2025"
-[dumpfile_size] 3826
+[dumpfile_mtime] "Sun Sep 28 16:10:11 2025"
+[dumpfile_size] 5767
 [savefile] "/home/nestor/cocotb_prj/src/pifo_test/tests/wave.gtkw"
 [timestart] 0
 [size] 1280 721
-[pos] -51 -51
+[pos] -1 -1
 *-17.000000 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1 -1
 [treeopen] pifo_reg_wrapper.
 [sst_width] 278
 [signals_width] 158
 [sst_expanded] 1
-[sst_vpaned_height] 199
+[sst_vpaned_height] 182
 @28
 pifo_reg_wrapper.rst
 pifo_reg_wrapper.clk
+pifo_reg_wrapper.dut.full
 pifo_reg_wrapper.insert
+pifo_reg_wrapper.dut.empty
 pifo_reg_wrapper.remove
 @22
 pifo_reg_wrapper.rank_in[15:0]
 pifo_reg_wrapper.meta_in[11:0]
 pifo_reg_wrapper.rank_out[15:0]
 pifo_reg_wrapper.meta_out[11:0]
-@23
+@28
+pifo_reg_wrapper.dut.valid_out
+pifo_reg_wrapper.dut.max_valid_out
+@22
 pifo_reg_wrapper.num_entries[4:0]
 [pattern_trace] 1
 [pattern_trace] 0

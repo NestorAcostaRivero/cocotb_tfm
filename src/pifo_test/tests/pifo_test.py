@@ -25,14 +25,14 @@ class PifoBasicTest(uvm_test):
     
     def end_of_elaboration_phase(self):
         # Crear secuencia de inserción
-        self.testPifo = PifoRandomSeq.create("rand_seq")
-        self.testPifo.num_txns = 9
+        self.testPifo = PifoRandomSeq.create("same_prio_diferent_meta")
+        self.testPifo.num_txns = 60
 
         ConfigDB().set(None, "", "SEQR_INSERT", self.env.agent_in.sequencer)
         ConfigDB().set(None, "", "SEQR_REMOVE", self.env.agent_out.sequencer)
 
         ConfigDB().set(None, "", "USE_PYVSC", True)   # True = usar PyVSC, False = estímulo clásico
-        ConfigDB().set(None, "", "PYVSC_SEED", 42)    # fija semilla para reproducibilidad
+        ConfigDB().set(None, "", "PYVSC_SEED", 41)    # fija semilla para reproducibilidad
 
 
     async def run_phase(self):
