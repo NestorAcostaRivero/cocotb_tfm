@@ -1,6 +1,6 @@
 import vsc
 from vsc import RandState
-from pifo_seq_item import PifoSeqItem   # ajusta el import si tu ruta es distinta
+from pifo_seq_item import PifoSeqItem   
 
 @vsc.randobj
 class _VscPifoTxn:

@@ -40,6 +40,6 @@ class PifoAgentOut(uvm_component):
         self.sequencer = PifoSequencer("sequencer", self)
 
     def connect_phase(self):
-        # Conectar el driver al sequencer (si es activo)
+        # Conectar el driver al sequencer
         self.driver.seq_item_port.connect(self.sequencer.seq_item_export)
         uvm_root().logger.info(f"AgentOut created")

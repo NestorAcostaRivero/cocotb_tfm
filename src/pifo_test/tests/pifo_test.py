@@ -32,7 +32,7 @@ class PifoBasicTest(uvm_test):
         ConfigDB().set(None, "", "SEQR_REMOVE", self.env.agent_out.sequencer)
 
         ConfigDB().set(None, "", "USE_PYVSC", True)   # True = usar PyVSC, False = estímulo clásico
-        ConfigDB().set(None, "", "PYVSC_SEED", 41)    # fija semilla para reproducibilidad
+        ConfigDB().set(None, "", "PYVSC_SEED", 42)    # fija semilla para reproducibilidad
 
 
     async def run_phase(self):
